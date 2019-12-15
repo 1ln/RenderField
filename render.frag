@@ -1,40 +1,28 @@
+//Sine wave interpolation
 //Signed Distance using raymarching
-//Copyright 2019, Dan Olson
+//Dan Olson 2019
 
 precision mediump float;
 
 varying vec2 vUv;
 varying vec2 vtc;
 
-//uniform mat4 viewMatrix;
-//uniform mat4 cameraWorldMatrix;
-//uniform mat4 cameraProjectionMatrixInverse;
-//uniform vec3 cameraPosition;
-
 uniform float u_hash;
-
 uniform vec2 u_mouse;
 uniform int u_mouse_pressed;
 uniform int u_swipe_dir;
-
 uniform vec2 u_resolution;
-
 uniform vec3 u_cam_target;
 uniform float u_time;
-
 uniform vec3 u_light;
-
 uniform int u_df;
 uniform int u_df2;
-
 uniform vec3 u_inner_rot;
 uniform vec3 u_outer_rot;
-
 uniform vec3 u_diffuse_col;
 uniform vec3 u_diffuse_b;
 uniform vec3 u_diffuse_c;
 uniform vec3 u_diffuse_d;
-
 uniform int u_diffuse_noise;
 
 const float PI  =  3.1415926;
@@ -45,49 +33,16 @@ const float PHI =  1.6180339;
 const float PHI_INV = 1.0/PHI;
 const float PHI_SPHERE = 1.0 - PHI/6.0;
 
-const int MARCH_STEPS = 64;
+const int MARCH_STEPS = 128;
 
 const float EPSILON = 0.0001;
 const float TRACE_DIST = 1000.0;
 
-int level_w = 0;
-int level_l = 0;
-int cone_activated = 0;
-float speed = 0.001;
-
-//float hash(float h) { return fract( h * u_hash ); }
 float hash(float h) { return fract(sin(h) * u_hash *  43758.5453 ); }
-
 
 //float hash(float h) { 
 //return fract(PHI/log(23324.0 ) * h  * 981123324.0  );
 //}
-
-//2D Hash Functions
-float rand2d(vec2 st) {
-return fract(sin(dot(st.xy,vec2(12.9898,78.233))) * 43758.5453123) * 2.0 - 1.0 ;
-}
-
-//2D Noise functions
-
-float noise2d(in vec2 st_) {
-
-    vec2 i = floor(st_);
-    vec2 f = fract(st_);
-
-float a = rand2d(i);
-    float b = rand2d(i + vec2(1.0,0.0));
-    float c = rand2d(i + vec2(0.0,1.0));
-    float d = rand2d(i + vec2(1.0,1.0));
- 
-    vec2 u = f * f * (3.0 - 2.0 * f);
-
-    return mix(a,b,u.x) + 
-        (c - a) * u.y * (1.0 - u.x) +
-        (d - b) * u.x * u.y;
-}
-
-//3D Hash Functions
 
 vec3 hash3(vec3 x) {
  
@@ -97,12 +52,6 @@ vec3 hash3(vec3 x) {
 
     return fract(sin(x) * 92352.3635 * u_hash);
 }
-
-//3D Noise Functions
-
-float sin3(vec3 p) {
-    return sin(p.x * u_hash) * sin(p.y * u_hash) * sin(p.z * u_hash);
-} 
  
 float cell(vec3 x,int type) {
  
@@ -196,9 +145,6 @@ float distortFractal(vec3 p,float f,int octaves) {
 
     return fractal312(p + f * r,octaves);
 } 
-
-      
-//Shaping Functions
 
 float linear(float x) {
 
@@ -308,13 +254,13 @@ float smoU(float d1,float d2,float k) {
     return mix(d2,d1,h) - k * h * (1.0 - h);
 }
 
-float diffsm(float d1,float d2,float k) {
+float smoD(float d1,float d2,float k) {
 
     float h = clamp(0.5 - 0.5 * (d2+d1)/k,0.0,1.0);
     return mix(d2,-d1,h) + k * h * (1.0 - h);
 }
 
-float intersectsm(float d1,float d2,float k) {
+float smoI(float d1,float d2,float k) {
 
     float h = clamp(0.5 + 0.5 * (d2-d1)/k,0.0,1.0);
     return mix(d2,d1,h) + k * h * (1.0 - h);
@@ -556,49 +502,50 @@ vec2 scene(vec3 p) {
 
 vec3 q = vec3(p);
 
-float s  = 0.001;
+float s  = 0.0001;
 float t  = u_time; 
 
-vec2 res = vec2(1.0,0.0);
-
-vec2 resr;
-vec2 resc;
+vec2 res1  = vec2(1.0,0.0);
+vec2 res2  = vec2(1.0,0.0);
+vec2 res   = vec2(0.0);
 
 int df;
 int df2;
 
 mat4 r = rotAxis(vec3(1.0,0.0,0.0),t*s );
-//  p = (vec4(p,1.0) * r).xyz;
+//p = (vec4(p,1.0) * r).xyz;
 
 mat4 r2 = rotAxis(vec3(0.,1.,0.0),t*s);
-//  q = (vec4(q,1.0) * r2).xyz;
+//q = (vec4(q,1.0) * r2).xyz;
 
-p += u_inner_rot;
+//p += u_inner_rot;
 
-df = 1;
-df2 = 1;
- 
-if(df == 1) { resr = vec2( hexRing(p,2.,2.1,0.5),0.0); }
-if(df == 2) { resr = vec2( torus(p,vec2(  1.0,0.5)),1.0); }
-if(df == 3) { resr = vec2( ring(p,2.,2.5,.25),3.0); } 
+df = u_df;
+df2 = u_df2;
 
-if(df2 == 0) { resc = vec2(boxSphereDiff(q,vec3(PHI_SPHERE),1.0),0.0); }
-if(df2 == 1) { resc = vec2(cornerBoxDiff(q,vec3(1.),1.0),0.0); }
-if(df2 == 2) { resc = vec2(link(p,1.0,0.5,1.0),0.0); }
+if(df == 0) { res1 = vec2( sphere(p,1.0),0.0); }
+if(df == 1) { res1 = vec2( torus(p,vec2(1.0,0.5)),1.0); }
+if(df == 2) { res1 = vec2( box(p,vec3(1.0)),2.0); } 
+if(df == 3) { res1 = vec2( hexPrism(p,vec2(1.0,0.5)),3.0); } 
+if(df == 4) { res1 = vec2( prism(p,vec2(1.0,0.5)),4.0); }
+if(df == 5) { res1 = vec2( cylinder(p,1.0,0.5),5.0); }
+if(df == 6) { res1 = vec2( link(p,0.75,1.0,0.75),6.0); }
+if(df == 7) { res1 = vec2( capsule(p,vec3(0.0,1.0,0.0),vec3(0.0,-1.0,0.0),0.25),7.0); }
+if(df == 8) { res1 = vec2( octahedron(p,1.0),8.0); }
+if(df == 9) { res1 = vec2( roundBox(p,vec3(1.0),0.15),9.0); }
 
-//res = vec2(max(-c,d1));
-res = min( resc,resr   );
+if(df2 == 0) { res2 = vec2( sphere(p,1.0),0.0); }
+if(df2 == 1) { res2 = vec2( torus(p,vec2(1.0,0.5)),1.0); }
+if(df2 == 2) { res2 = vec2( box(p,vec3(1.0)),2.0); } 
+if(df2 == 3) { res2 = vec2( hexPrism(p,vec2(1.0,0.5)),3.0); } 
+if(df2 == 4) { res2 = vec2( prism(p,vec2(1.0,0.5)),4.0); }
+if(df2 == 5) { res2 = vec2( cylinder(p,1.0,0.5),5.0); }
+if(df2 == 6) { res2 = vec2( link(p,0.75,1.0,0.75 ),6.0); }
+if(df2 == 7) { res2 = vec2( capsule(p,vec3(0.0,1.0,0.0),vec3(0.0,-1.0,0.0),0.25),7.0); }
+if(df2 == 8) { res2 = vec2( octahedron(p,1.0),8.0); }
+if(df2 == 9) { res2 = vec2( roundBox(p,vec3(1.0),0.15),9.0); }
 
-
-
-/*
-df = sphere(p,1.);
-df = box(p,vec3(1.0);
-df = cylinder(p,1.0,.5);
-df = octahedron(p,1.0);
-df = prism(p,vec2(1.0,0.0));
-df = hexPrism(p,vec2(1.0,d));
-*/
+res = vec2(mix(res1,res2,sin(t*s)));
 
 return res;
 }
@@ -673,7 +620,7 @@ vec3 phongLight(vec3 ka,vec3 kd,vec3 ks,float alpha,vec3 p,vec3 cam_ray) {
      const vec3 ambient_light = 0.5  * vec3(1.0,1.0,1.0);
      vec3 color = ka * ambient_light;  
      
-     vec3 light  = vec3( 0.0,0.0,0.0 ) ;
+     vec3 light  = vec3( 0.0,0.0,10.0 ) ;
      vec3 intensity = vec3(1.0);
    
      vec3 light2 = vec3(0.0,10.0,0.0);
@@ -758,10 +705,10 @@ float n = 0.0;
 
 void main() {
  
-//vec3 cam_pos = cameraPosition;
+vec3 cam_pos = cameraPosition;
 vec3 cam_target = u_cam_target;
 
-vec3 cam_pos = vec3(0.0,1.5,6.);
+//vec3 cam_pos = vec3(0.0,1.5,6.);
 //vec3 cam_target = u_mouse_ray;
 
 mat4 cam_rot = rotAxis(vec3(0.0,1.0,0.0),u_time * 0.0001);
