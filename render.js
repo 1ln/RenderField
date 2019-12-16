@@ -52,7 +52,7 @@ hash = nhash();
 
 swipe_dir = 0;
 
-cam.position.set(0.0,0.6108,-1.6108); 
+cam.position.set(0.0,1.0,5.0);
 cam_target  = new THREE.Vector3(0.0);
 
 diffuse_noise = Math.round(nhash() * 5); 
@@ -63,7 +63,6 @@ diffuse_c       = new THREE.Color( nhash(),nhash(),nhash());
 diffuse_d       = new THREE.Color( nhash(),nhash(),nhash());
 
 df  = nhash();
-df2 = nhash();
 
 angle = nhash() * Math.PI;
 
@@ -73,7 +72,7 @@ controls = new THREE.OrbitControls(cam,canvas);
     controls.target = cam_target;
     controls.enableDamping = true;
     controls.enablePan = false; 
-    controls.enabled = false; 
+    controls.enabled = true;
 
 scene = new THREE.Scene();
 geometry = new THREE.PlaneBufferGeometry(2,2);
@@ -121,10 +120,10 @@ ShaderLoader("render.vert","render.frag",
         render = function(timestamp) {
         requestAnimationFrame(render);
 
-        if(swipeLeft()  === true) { swipe_dir = 1; init(); }
-        if(swipeUp()    === true) { swipe_dir = 2; init(); }
-        if(swipeRight() === true) { swipe_dir = 3; init(); }
-        if(swipeDown()  === true) { swipe_dir = 4; init(); }
+        prev_hash = hash;
+
+    //    if(swipeLeft()  === true ) { df = 0.0; }
+    //    if(swipeRight() === true)  {           }
 
         uniforms["u_time"                ].value = performance.now();
         uniforms["u_swipe_dir"           ].value = swipe_dir;

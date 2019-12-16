@@ -245,7 +245,7 @@ float opSf(float d1,float d2) {
     return max(-d1,d2);
 }
 
-float smoU(float d1,float d2,float k) {
+float smou(float d1,float d2,float k) {
 
     float h = clamp(0.5 + 0.5 * (d2-d1)/k,0.0,1.0);
     return mix(d2,d1,h) - k * h * (1.0 - h);
@@ -401,99 +401,6 @@ float octahedron(vec3 p,float s) {
     float k = clamp(0.5 *(q.z-q.y+s),0.0,s);
     return length(vec3(q.x,q.y-s+k,q.z - k)); 
 }
-
-float boxSphereDiff(vec3 p,vec3 bd,float sr) {
- 
-    float sphere = sphere(p,sr);
-    float box = box(p,bd);
-    return max(-sphere,box);
-}
-
-    float xCapsule(vec3 p) {
-    float cap_x = capsule(p,vec3(1.0,0.0,0.0),vec3(0.0,0.0,1.0),.25);
-    float cap_y = capsule(p,vec3(.0,-1.0,0.0),vec3(0.0,1.0,0.0),0.25);
-    return min(cap_x,cap_y);
-}
-
-float binarySpheres(vec3 p,float d,float r) {
-
-    float s = sphere(p-vec3(0.0,-r,0.0),d);
-    float s2 = sphere(p-vec3(0.0,r,0.0),d);
-
-    return min(s,s2); 
-}
-
-float binaryBoxes(vec3 p,float d,float r) {
-  
-    float b1 = box(p-vec3(0.0,-r,0.0),vec3(d));
-    float b2 = box(p-vec3(0.0,r,0.0),vec3(d));
-    
-    return min(b1,b2);  
-}
-
-float binaryCylinder(vec3 p,float d,float h,float r) {
-    float c1 = cylinder(p-vec3(0.0,-r,0.0),h,d);
-    float c2 = cylinder(p-vec3(0.0,r,0.0),h,d);
-    return min(c1,c2);
-}
-
-float sphereConesSmooth(vec3 p,float r,float sf,vec2 c) {
-   
-    float c1 = cone(p,vec2(c.x,c.y));
-    float c2 = cone(p,vec2(c.x,-c.y)); 
-    float s  = sphere(p,r);
-
-    return smoU(c2,smoU(c1,s,sf),sf);
-} 
-
-float boxDiffInnerRotate(vec3 p,vec3 d,float s,float a) {
-     
-     mat4 r = rotAxis(vec3(1.0,0.0,0.0),a);
-     p = (vec4(p,1.0) * r).xyz;
-
-     float inb = box(p,vec3(d+s));
-     float oub = box(p,vec3(d));
-
-     return max(-inb,oub);
-} 
-
-float cornerBoxDiff(vec3 p, vec3 d,float h) {
-   
-     float cdb = box(p-vec3(h),d);
-     float oud = box(p,d);
-  
-     return max(-cdb,oud);
-} 
-
-float sphereFractal(vec3 p,float r,float h,int octaves) {
- 
-    return length(p) + fractal312(p,octaves)*h - r;
-}
-
-float binarySphereBox(vec3 p,float sr,float b1r,float b2r) {
-
-    float s = sphere(p,sr);
-    float b1 = box(p-vec3(0.0,0.0,1.0),vec3(b1r));
-    float b2 = box(p-vec3(0.0,0.0,-1.0),vec3(b2r)); 
-    
-    return min(max(-s,b1),max(-s,b2));
-}  
-
-//rotational structures on ring 2 or 3
-
-float ring(vec3 p,float ir,float or,float d) {
-    float c = cylinder(p,d,or);
-    float s = sphere(p,ir);
-    return max(-s,c);
-}
-
-float hexRing(vec3 p,float ir,float or,float d) {
-    float h = hexPrism(p,vec2(or,d));
-    float s = sphere(p,ir);
-    return max(-s,h);
-}     
-
-
    
 vec2 scene(vec3 p) { 
 
@@ -502,13 +409,17 @@ vec3 q = vec3(p);
 float s  = 0.0001;
 float t  = u_time; 
 float a  = u_angle;
+vec3 rl  = vec3(0.0);
 
 vec2 res   = vec2(0.0);
 
 mat4 r = rotAxis(vec3(1.0,0.0,0.0),a);
 p = (vec4(p,1.0) * r).xyz;
 
-float df  = floor(u_df * 10.0);
+rl = repeatLimit(p,1.0, vec3(1.0));
+
+float df  = floor(u_df * 13.0);
+//float df = 10.0;
 
 if(df == 0.0)  { res = vec2( sphere(p,1.0),0.0); }
 if(df == 1.0)  { res = vec2( torus(p,vec2(1.0,0.5)),1.0); }
@@ -520,8 +431,10 @@ if(df == 6.0)  { res = vec2( link(p,0.75,1.0,0.75),6.0); }
 if(df == 7.0)  { res = vec2( capsule(p,vec3(0.0,1.0,0.0),vec3(0.0,-1.0,0.0),0.25),7.0); }
 if(df == 8.0)  { res = vec2( octahedron(p,1.0),8.0); }
 if(df == 9.0)  { res = vec2( roundBox(p,vec3(1.0),0.15),9.0); }
-
-
+if(df == 10.0) { res = vec2( max(-sphere(p,1.0),box(p,vec3(1.0 - PHI/6.0))),10.0); }
+if(df == 11.0) { res = vec2( max(-sphere(p,1.0),sphere(p - vec3(0.0,0.0,1.0),1.0)),11.0); }
+if(df == 12.0) { res = vec2( box(p * rl,vec3(1.0)),12.0); } 
+if(df == 13.0) { res = vec2( smou(box(p-vec3(0.0,1.0,0.0),vec3(1.0)) ,box(p-vec3(0.0,-1.0,0.0),vec3(1.0)),0.25)); }
 
 return res;
 }
@@ -559,13 +472,6 @@ vec3 calcNormal(vec3 p) {
 
     ));
 
-}
-
-vec3 rgb2hsv(in vec3 c) {
-
-    vec3 rgb = clamp(abs(mod(c.x * 6.0 + vec3(0.0,4.0,2.0),6.0) - 3.0) - 1.0,0.0,1.0); 
-    rgb = rgb * rgb - (3.0 - 2.0) * rgb; 
-    return c.z * mix(vec3(1.0),rgb,c.y);
 }
 
 vec3 phongModel(vec3 kd,vec3 ks,float alpha,vec3 p,vec3 cam_ray,vec3 light_pos,vec3 intensity) {  
