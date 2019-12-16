@@ -9,16 +9,13 @@ varying vec2 vtc;
 
 uniform float u_hash;
 uniform vec2 u_mouse;
-uniform int u_mouse_pressed;
 uniform int u_swipe_dir;
 uniform vec2 u_resolution;
 uniform vec3 u_cam_target;
 uniform float u_time;
-uniform vec3 u_light;
-uniform int u_df;
-uniform int u_df2;
-uniform vec3 u_inner_rot;
-uniform vec3 u_outer_rot;
+uniform float u_angle;
+uniform float u_df;
+uniform float u_df2;
 uniform vec3 u_diffuse_col;
 uniform vec3 u_diffuse_b;
 uniform vec3 u_diffuse_c;
@@ -473,7 +470,7 @@ float sphereFractal(vec3 p,float r,float h,int octaves) {
     return length(p) + fractal312(p,octaves)*h - r;
 }
 
-float binarySphereBoxDiffHalf(vec3 p,float sr,float b1r,float b2r) {
+float binarySphereBox(vec3 p,float sr,float b1r,float b2r) {
 
     float s = sphere(p,sr);
     float b1 = box(p-vec3(0.0,0.0,1.0),vec3(b1r));
@@ -504,48 +501,27 @@ vec3 q = vec3(p);
 
 float s  = 0.0001;
 float t  = u_time; 
+float a  = u_angle;
 
-vec2 res1  = vec2(1.0,0.0);
-vec2 res2  = vec2(1.0,0.0);
 vec2 res   = vec2(0.0);
 
-int df;
-int df2;
+mat4 r = rotAxis(vec3(1.0,0.0,0.0),a);
+p = (vec4(p,1.0) * r).xyz;
 
-mat4 r = rotAxis(vec3(1.0,0.0,0.0),t*s );
-//p = (vec4(p,1.0) * r).xyz;
+float df  = floor(u_df * 10.0);
 
-mat4 r2 = rotAxis(vec3(0.,1.,0.0),t*s);
-//q = (vec4(q,1.0) * r2).xyz;
+if(df == 0.0)  { res = vec2( sphere(p,1.0),0.0); }
+if(df == 1.0)  { res = vec2( torus(p,vec2(1.0,0.5)),1.0); }
+if(df == 2.0)  { res = vec2( box(p,vec3(1.0)),2.0); } 
+if(df == 3.0)  { res = vec2( hexPrism(p,vec2(1.0,0.5)),3.0); } 
+if(df == 4.0)  { res = vec2( prism(p,vec2(1.0,0.5)),4.0); }
+if(df == 5.0)  { res = vec2( cylinder(p,1.0,0.5),5.0); }
+if(df == 6.0)  { res = vec2( link(p,0.75,1.0,0.75),6.0); }
+if(df == 7.0)  { res = vec2( capsule(p,vec3(0.0,1.0,0.0),vec3(0.0,-1.0,0.0),0.25),7.0); }
+if(df == 8.0)  { res = vec2( octahedron(p,1.0),8.0); }
+if(df == 9.0)  { res = vec2( roundBox(p,vec3(1.0),0.15),9.0); }
 
-//p += u_inner_rot;
 
-df = u_df;
-df2 = u_df2;
-
-if(df == 0) { res1 = vec2( sphere(p,1.0),0.0); }
-if(df == 1) { res1 = vec2( torus(p,vec2(1.0,0.5)),1.0); }
-if(df == 2) { res1 = vec2( box(p,vec3(1.0)),2.0); } 
-if(df == 3) { res1 = vec2( hexPrism(p,vec2(1.0,0.5)),3.0); } 
-if(df == 4) { res1 = vec2( prism(p,vec2(1.0,0.5)),4.0); }
-if(df == 5) { res1 = vec2( cylinder(p,1.0,0.5),5.0); }
-if(df == 6) { res1 = vec2( link(p,0.75,1.0,0.75),6.0); }
-if(df == 7) { res1 = vec2( capsule(p,vec3(0.0,1.0,0.0),vec3(0.0,-1.0,0.0),0.25),7.0); }
-if(df == 8) { res1 = vec2( octahedron(p,1.0),8.0); }
-if(df == 9) { res1 = vec2( roundBox(p,vec3(1.0),0.15),9.0); }
-
-if(df2 == 0) { res2 = vec2( sphere(p,1.0),0.0); }
-if(df2 == 1) { res2 = vec2( torus(p,vec2(1.0,0.5)),1.0); }
-if(df2 == 2) { res2 = vec2( box(p,vec3(1.0)),2.0); } 
-if(df2 == 3) { res2 = vec2( hexPrism(p,vec2(1.0,0.5)),3.0); } 
-if(df2 == 4) { res2 = vec2( prism(p,vec2(1.0,0.5)),4.0); }
-if(df2 == 5) { res2 = vec2( cylinder(p,1.0,0.5),5.0); }
-if(df2 == 6) { res2 = vec2( link(p,0.75,1.0,0.75 ),6.0); }
-if(df2 == 7) { res2 = vec2( capsule(p,vec3(0.0,1.0,0.0),vec3(0.0,-1.0,0.0),0.25),7.0); }
-if(df2 == 8) { res2 = vec2( octahedron(p,1.0),8.0); }
-if(df2 == 9) { res2 = vec2( roundBox(p,vec3(1.0),0.15),9.0); }
-
-res = vec2(mix(res1,res2,sin(t*s)));
 
 return res;
 }
@@ -647,9 +623,9 @@ vec3 rayCamDir(vec2 uv,vec3 camPosition,vec3 camTarget) {
 
 vec3 render(vec3 ro,vec3 rd) {
 
-vec3 color = vec3(0.0);
+    vec3 color = vec3(0.0);
 
-vec2 d = rayScene(ro, rd);
+    vec2 d = rayScene(ro, rd);
 
 vec3 p = ro + rd * d.x;
 
@@ -692,7 +668,6 @@ float n = 0.0;
 
       kd = fmCol(p.y+n,vec3(u_diffuse_col),vec3(u_diffuse_b),vec3(u_diffuse_c),vec3(u_diffuse_d));
  
-      //vec3 ka = vec3(u_ambient_col);
       vec3 ka = vec3(0.0); 
       vec3 ks = vec3(1.0);
 
@@ -708,38 +683,17 @@ void main() {
 vec3 cam_pos = cameraPosition;
 vec3 cam_target = u_cam_target;
 
-//vec3 cam_pos = vec3(0.0,1.5,6.);
-//vec3 cam_target = u_mouse_ray;
-
 mat4 cam_rot = rotAxis(vec3(0.0,1.0,0.0),u_time * 0.0001);
 //cam_pos = (vec4(cam_pos,1.0) * cam_rot).xyz;
 
 vec2 uvu = -1.0 + 2.0 * vUv.xy;
 
-//vec2 uvu = (gl_FragCoord.xy * 2.0 - u_resolution) / u_resolution;
-//vec2 uvu =  -1.0 + 2.0 * (gl_FragCoord.xy/u_resolution.xy ) * 0.5 ;
-//vec2 uvu = 0.5 * (gl_FragCoord.xy/u_resolution.xy) * 2.0 - 1.0 ;
-
-//vec2 s = (gl_FragCoord.xy * 2.0 - u_resolution)/u_resolution ;
-//vec4 ndcRay =vec4(s.xy,1.0,-1.0);
-//vec3 ray = (cameraWorldMatrix * cameraProjectionMatrixInverse * ndcRay).xyz;
-//ray = normalize(ray);
-//uvu = normalize(uvu);
-
 uvu.x *= u_resolution.x/u_resolution.y; 
 
 vec3 direction = rayCamDir(uvu,cam_pos,cam_target);
 
-//vec dir = rayCamDir(s,camera_position,cam_target);
-
 vec3 color = render(cam_pos,direction);
 
-//vec3 color = render(camera_position,dir);
-//vec3 color = vec3(uvu.xy,0.0);
-//vec3 color = vec3(0.0);
-//vec4 color = texture2D(u_texture,vec2(gl_FragCoord.xy/256.0));
-
-//gl_FragColor = color;
 gl_FragColor = vec4(color,1.0);
 
 }

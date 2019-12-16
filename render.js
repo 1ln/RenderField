@@ -4,20 +4,13 @@ let canvas;
 let renderer;
 
 let nhash,hash;  
-let mouse, mouse_pressed;
 
 let swipe_dir;
 
 let df;
 let df2;
 
-let q1;
-let q2;
-
-let inner_rot;
-let outer_rot;
-
-let speed;
+let angle;
 
 let diffuse_col; 
 let diffuse_a,diffuse_b,diffuse_c;
@@ -30,11 +23,6 @@ let cam,scene,geometry,mesh,mat;
 let aspect;
 
 let cam_target;
-
-let light;
-
-let delta;
-let clock;
 
 let uniforms;
 let render;
@@ -51,10 +39,8 @@ canvas.height = h;
 
 renderer = new THREE.WebGLRenderer({canvas:canvas});
 
-mouse_pressed = 0;
-
 aspect = w/h;
-trace_distance = 1000.0;
+trace_distance = 500.0;
 
 cam = new THREE.PerspectiveCamera(45.0,aspect,0.0,trace_distance);
 
@@ -66,12 +52,8 @@ hash = nhash();
 
 swipe_dir = 0;
 
-//cam.position.set(nhash()*5.0,nhash()*5.0,nhash()*5.0);
-cam.position.set(0.0,2.5,-2.5); 
+cam.position.set(0.0,0.6108,-1.6108); 
 cam_target  = new THREE.Vector3(0.0);
-
-light = new THREE.Vector3(0.0,2.5,0.0);
-
 
 diffuse_noise = Math.round(nhash() * 5); 
 
@@ -80,19 +62,10 @@ diffuse_b       = new THREE.Color( nhash(),nhash(),nhash());
 diffuse_c       = new THREE.Color( nhash(),nhash(),nhash());
 diffuse_d       = new THREE.Color( nhash(),nhash(),nhash());
 
-df  = Math.round(nhash() * 10.0);
-df2 = Math.round(nhash() * 10.0);
+df  = nhash();
+df2 = nhash();
 
-inner_rot = new THREE.Vector3(0.0,10.0,0.0);
-outer_rot = new THREE.Vector3(0.0); 
-
-q1 = new THREE.Quaternion();
-q2 = new THREE.Quaternion();
-
-speed = 0.001;
-
-//q1.setFromAxisAngle(new THREE.Vector3(0.0,1.0,0.0),Math.PI * 2.0);
-//q2.setFromAxisAngle(new THREE.Vector3(1.0,0.0,0.0),Math.PI * 2.0);
+angle = nhash() * Math.PI;
 
 controls = new THREE.OrbitControls(cam,canvas);
     controls.minDistance = 1.5;
@@ -109,13 +82,9 @@ uniforms = {
 
     "u_time"                : { value : 1.0 },
     "u_resolution"          : new THREE.Uniform(new THREE.Vector2(w,h)),
-    "u_mouse"               : new THREE.Uniform(new THREE.Vector2()),
-    "u_mouse_pressed"       : { value : mouse_pressed },
     "u_swipe_dir"           : { value : swipe_dir }, 
     "u_cam_target"          : new THREE.Uniform(new THREE.Vector3(cam_target)),
-    "u_light"               : new THREE.Uniform(new THREE.Vector3(light)),
-    "u_inner_rot"           : new THREE.Uniform(new THREE.Vector3(inner_rot)),
-    "u_outer_rot"           : new THREE.Uniform(new THREE.Vector3(outer_rot)),
+    "u_angle"               : { value : angle },
     "u_hash"                : { value: hash },
     "u_df"                  : { value: df },
     "u_df2"                 : { value: df2 }, 
@@ -142,90 +111,36 @@ ShaderLoader("render.vert","render.frag",
 
         });
 
-    mesh = new THREE.Mesh(geometry,material);
+        mesh = new THREE.Mesh(geometry,material);
 
-    scene.add(mesh);
+        scene.add(mesh);
 
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(w,h);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(w,h);
 
-    render = function(timestamp) {
+        render = function(timestamp) {
         requestAnimationFrame(render);
-    
-        delta = clock.getDelta();    
 
-        q1.setFromAxisAngle(new THREE.Vector3(1.0,0.0,0.0),delta*1.  );
-        q2.setFromAxisAngle(new THREE.Vector3(1.0,0.0,0.0),delta);    
-        
-        inner_rot.applyQuaternion(q1);
-        outer_rot.applyQuaternion(q2);
-
-        $('#canvas').mousedown(function() {
-        mouse_pressed = true;
-        
-        });
-   /*     
-        $('#canvas').mouseup(function() {
-        moused_pressed = false;
-        console.log("test1");
-        });
-
-        if(swipeLeft()  === true) { swipe_dir = 1; }
-        if(swipeUp()    === true) { swipe_dir = 2; }
-        if(swipeRight() === true) { swipe_dir = 3; }
-        if(swipeDown()  === true) { swipe_dir = 4; }
-
-        if(mouse_pressed === true) {
-        
-        //console.log(mouse_pressed);
-        //stop_test();    
-       }*/
+        if(swipeLeft()  === true) { swipe_dir = 1; init(); }
+        if(swipeUp()    === true) { swipe_dir = 2; init(); }
+        if(swipeRight() === true) { swipe_dir = 3; init(); }
+        if(swipeDown()  === true) { swipe_dir = 4; init(); }
 
         uniforms["u_time"                ].value = performance.now();
-        uniforms["u_mouse"               ].value = mouse;
-        uniforms["u_mouse_pressed"       ].value = mouse_pressed;
         uniforms["u_swipe_dir"           ].value = swipe_dir;
         uniforms["u_cam_target"          ].value = cam_target;
-        uniforms["u_light"               ].value = light;
         uniforms["u_hash"                ].value = hash;
         uniforms["u_df"                  ].value = df;
         uniforms["u_df2"                 ].value = df2;
-        uniforms["u_inner_rot"           ].value = inner_rot;
-        uniforms["u_outer_rot"           ].value = outer_rot;
+        uniforms["u_angle"               ].value = angle;
         uniforms["u_diffuse_col"         ].value = diffuse_col;
         uniforms["u_diffuse_b"           ].value = diffuse_b;
         uniforms["u_diffuse_c"           ].value = diffuse_c;
         uniforms["u_diffuse_d"           ].value = diffuse_d;
         uniforms["u_diffuse_noise"       ].value = diffuse_noise;
 
-        controls.update();
         renderer.render(scene,cam);
         }
         render();
         }) 
-/*
-     $('#canvas').mousedown(function() { 
-        mouse_pressed = true;
         
-      });
-
-     $('#canvas').mouseup(function() {
-       mouse_pressed = false;
-       });        
- */    
-
-function stop_test() {
-console.log("test");
-setTimeout(stop_test,2000);
-} 
-
-
-
-
-/*
-window.addEventListener('mousemove',onMouseMove,false);
-
-function onMouseMove(event) {
-    mouse.x = (event.clientX / w) * 2.0 - 1.0; 
-    mouse.y = -(event.clientY / h) * 2.0 + 1.0;
-}*/
