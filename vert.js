@@ -1,3 +1,4 @@
+const vert = `
 #version 300 es
 
 varying vec2 uVu;
@@ -8,3 +9,4 @@ uVu = uv;
 gl_Position = vec4(position,1.0);
 
 }
+`;
