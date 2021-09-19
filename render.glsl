@@ -6,50 +6,18 @@ out vec4 FragColor;
 uniform vec2 resolution;
 
 uniform float time;
-uniform int frame; 
-uniform float hour;
-uniform float minute;
-uniform float second;
+uniform int aa; 
+uniform float eps;
+uniform float trace_distance;
 
 uniform vec3 camPos;
 uniform sampler2D tex;
 uniform int seed;
 
 uniform vec2 mouse;
-uniform vec2 mouse_scroll;
-uniform bool mouse_left;
-uniform bool mouse_right;
-uniform bool mouse_middle;
 
-#define AA 1
-#define EPS 0.0001 
-#define HASH_TYPE
-
-float dot2(vec2 v) { return dot(v,v); }
-float dot2(vec3 v) { return dot(v,v); }
-float ndot(vec2 a,vec2 b) { return a.x * b.x - a.y * b.y; }
-
-#ifdef HASH_TYPE
-
-float h11(float p) {
-    return fract(sin(p)*float(43758.5453+seed));
-}
-
-float h21(vec2 p) {
-    return fract(sin(dot(p,vec2(12.9898,78.233)*float(43758.5453+seed))));
-}
-
-vec2 h22(vec2 p) {
-    return fract(vec2(sin(p.x*353.64+p.y*135.1),cos(p.x*333.76+p.y*57.33)));
-}
-
-vec3 h33(vec3 p) {
-    p = vec3(dot(p,vec3(100.45,10.22,267.6)),
-             dot(p,vec3(35.16,5.55,161.72)),
-             dot(p,vec3(111.64,46.9,16.1)));
-    return fract(sin(p)*float(43758.5453+seed));
-}
-#else
+uniform int field;
+uniform int material;
 
 float h11(float p) {
     uvec2 n = uint(int(p)) * uvec2(1391674541U,seed);
@@ -76,8 +44,6 @@ vec3 h33(vec3 p) {
    return vec3(h) * (1.0/float(0xffffffffU));
 
 }
-
-#endif 
 
 vec2 h12rad(float n) {
     float a = fract(sin(n*5673.)*48.)*radians(180.);
@@ -984,10 +950,10 @@ vec3 color = vec3(0.);
 vec3 ta = vec3(0.);
 vec3 ro = camPos;
 
-for(int k = 0; k < AA; k++ ) {
-   for(int l = 0; l < AA; l++) {
+for(int k = 0; k < aa; k++ ) {
+   for(int l = 0; l < aa; l++) {
    
-       vec2 o = vec2(float(k),float(l)) / float(AA) * .5;
+       vec2 o = vec2(float(k),float(l)) / float(aa) * .5;
        vec2 uv = (2.* (gl_FragCoord.xy+o) - resolution.xy)/resolution.y;
 
        vec3 rd = rayCamDir(uv,ro,ta,1.); 

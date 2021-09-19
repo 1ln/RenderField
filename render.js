@@ -66,27 +66,19 @@ geometry = new THREE.PlaneBufferGeometry(2,2);
 
 uniforms = {
 
-    "u_time"                : { value : 1.0 },
-    "u_resolution"          : new THREE.Uniform(new THREE.Vector2(w,h)),
-    "u_mouse"               : new THREE.Uniform(new THREE.Vector2()),
-    "u_mouse_pressed"       : { value : mouse_pressed },
-"u_cam_target"          : new THREE.Uniform(new THREE.Vector3(cam_target)),
-    "u_hash"                : { value: hash }, 
-    "u_epsilon"             : { value: epsilon },
-    "u_trace_distance"      : { value: trace_distance },
-    "u_texture"             : { type : "t", value: texture }
+    "time"                : { value : 1.0 },
+    "resolution"          : new THREE.Uniform(new THREE.Vector2(w,h)),
+    "mouse"               : new THREE.Uniform(new THREE.Vector2()),
+    "aa"                  : { value : mouse_pressed },
+    "camPos"              : new THREE.Uniform(new THREE.Vector3(cam_target)),
+    "seed"                : { value: hash }, 
+    "eps"                 : { value: epsilon },
+    "trace_distance"      : { value: trace_distance },
+    
+    "texture"             : { type : "t", value: texture }
 
 
 };   
-
-defines = {
-
-    FIELD : field,
-    COLOR : color,
-    LIGHT : light
-
-};
-
 
 }
 init();
@@ -113,14 +105,16 @@ ShaderLoader("render.vert","render.frag",
     
         delta = clock.getDelta();
 
-        uniforms["u_time"                ].value = performance.now();
-        uniforms["u_mouse"               ].value = mouse;
-        uniforms["u_mouse_pressed"       ].value = mouse_pressed;
-        uniforms["u_cam_target"          ].value = cam_target;
-        uniforms["u_hash"                ].value = hash;
-        uniforms["u_epsilon"             ].value = epsilon;
-        uniforms["u_trace_distance"      ].value = trace_distance;
-        uniforms["u_texture"             ].value = texture;         
+        uniforms["time"                ].value = performance.now();
+        uniforms["mouse"               ].value = mouse;
+        uniforms["aa"                  ].value = aa;
+        uniforms["camPos"              ].value = camPos;
+        uniforms["seed"                ].value = hash;
+        uniforms["eps"                 ].value = epsilon;
+        uniforms["trace_distance"      ].value = trace_distance;
+        uniforms["field"               ].value = field;
+        uniforms["material"            ].value = material;
+        uniforms["texture"             ].value = texture;         
 
         controls.update();
         renderer.render(scene,cam);
@@ -136,12 +130,8 @@ $('#field').change(function() {
     field = $('#field').val();
 });
 
-$('#color').change(function() {
-    color = $('#color').val();
-});
-
-$('#light').change(function() {
-    light = $('#light').val();
+$('#material').change(function() {
+    color = $('#material').val();
 });
 
 $('#eps').change(function() {
@@ -151,17 +141,6 @@ $('#eps').change(function() {
 $('#d').change(function() {
     trace_distance = parseFloat($('#d').val());
 });
-
-$('#ta').click(function() {
-        
-         cam_target.position.set( 
-         parseFloat($('#x').val()),
-         parseFloat($('#y').val()),
-         parseFloat($('#z').val())
-         ); 
-
-
-}); 
 
 window.addEventListener('mousemove',onMouseMove,false);
 
