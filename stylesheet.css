@@ -1,64 +1,21 @@
-/*
-
-body {
-background-color:grey;
-}
-
-#canvas {
-}
-
-#gui_container {
-
-width:512px;
-height:100%;
-padding-left:10px;
-
-background-color:lightgrey;
-overflow:hidden;
-
-}
-
-#gui_scroll { 
-width: 512px;
-height: 512px;
-overflow-y:scroll;
-
-} 
-
-@media (min-width: 900px) {
-*/
+/*minimal css*/
 
 * {
 margin:0;
 } 
 
 html, body {
-display:flex;
 height:100%;
-width:100%;
 }
 
 #canvas {
 display:flex;
-width:512px;
-height:512px;
-}
-
-#gui_container {
-display:flex;
 width:100%;
 height:100%;
-background-color:lightgrey;
-overflow:hidden;
+align-items:center;
+justify-content:center;
 }
 
-#gui_scroll {
-width:100%;
-height:100%;
-padding:1em;
-overflow-y:scroll;
+#cl {
+margin:5pt;
 }
-
-label {
-display:flex;
-} 

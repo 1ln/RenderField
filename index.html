@@ -2,7 +2,7 @@
 
 <head>
 
-<title> Distance Field Rendering Engine in Webgl, Copyright 2019  </title>
+<title>df demos</title>
 
 <meta name="viewport" content="width=device-width", user-scalable=no, minimum-scale=0.0 maximum-scale=0.0 /> 
 <meta name="theme-color" content="#000">
@@ -12,165 +12,53 @@
 
 </head>
 
-
 <canvas id="canvas"></canvas>
 
 <div id="gui_container"> 
+
+    <div class="cl">
+
+        <input type ="text" id="hash">
+        <button id="update_hash">update hash</button>
+
+    </div>
+   
+    <div class="cl">
+        
+    <select id="field" size="5" >
+        <option value="0">Log Radial     </option>
+        <option value="1">Box Repeat     </option>
+        <option value="2">Capsule Field  </option>
+        <option value="3">Torus Inverted </option>
+        <option value="4">Gyroid         </option>
+        <option value="5">Sphere box     </option>    
+    </select>
     
-    <div id="gui_scroll">
-
-        <div class="config_container">
-
-             <h3> Raymarcher configuration </h3>
-
-             <label>
-             <input type="text" id="epsilon">
-             
-             <button id="update_epsilon">update epsilon</button><br>
-             </label>
-
-             <label>Trace Distance
-             <input type="range" id="trace_distance" min="0.0" max="2000.0">
-             </label>
-
-        </div>
-
-        <div class="config_container">
-
-            <h3>Camera settings</h3>
-
-                <div class="config_group">
-      
-                    <h5>Camera position</h5>
-                  <label>      <input type="text" id="cam_x">camera x</label>  
-                  <label>       <input type="text" id="cam_y">camera y</label>   
-                  <label>       <input type="text" id="cam_z">camera z</label>   
-                    <button id="update_cam_pos">update camera position</button>
-          
-                </div>
-                
-                <div class="config_group">
-
-                    <h5>Camera Animation</h5>
-                    <select id="cam_animate">
-                        <option value="0">none</option>
-                        <option value="1">linear</option>
-                        <option value="2">rotate around target</option>
-                        <option value="3">sine loop</option>
-                    </select>
-
-        </div>
-
-        <div class="config_container">
-            <h3>Noise Configuration</h3>
-
-            <label>
-            <input type ="text" id="hash">
-            <button id="update_hash">update hash</button>
-            </label>
-
-            <label>Octaves
-            <input type="range" id="octaves">
-            </label>
-
-        </div>
-
-        <div class="config_group">
-            <h3>Demo Select</h3>
-            <select id="distance_fields" size="10" >
-                <option value="0">Sphere        </option>
-                <option value="1">Box           </option>
-                <option value="2">Capsule       </option>
-                <option value="3">Torus         </option>
-                <option value="4">Rounded Cone  </option>
-                <option value="5">Link          </option>
-                <option value="6">Sphere box    </option>
-                <option value="7">Cylinder      </option>
-                <option value="8">Prism         </option>
-                <option value="9">Hex Prism     </option>  
-        
-            </select>
-
-        </div>
-        
-
-        <div class="config_container">
-     
-            <h3>Scene Configuration</h3> 
-            <label>   <input type="checkbox" id="repeat">  Repeat Modulo</label>
-            <label>Repeat Distance
-            <input type="range" id="repeat_distance">
-            </label>
-        </div>
-
-        <div class="config_container">
-
-            <h3>Scene Lighting</h3> 
-
-                <div class="config_group">
-
-                    <h5>Scene light position</h5>
-                    <label>      <input type="text" id="light_x"> scene light x </label>
-                    <label>     <input type="text" id="light_y">scene light y </label>
-                    <label>     <input type="text" id="light_z">scene light z </label>
-                    <button id="update_light_pos">update light position</button>
-
-               </div>
-
-               <div class="config_group">
-
-                   <h5>Light phong settings</h5>
-                  
-                   <label>Intensity</label>
-                   <input type="range" id="intensity" min="0.0" max="100.0" >
-                   </label>                   
-
-                   <label>Shininess
-                   <input type="range" id="shininess" min="0.0" max="100.0"  >
-                   </label>
-
-
-               </div>
-
-               <div class="config_group">
-
-                   <h5>Phong</h5>
-                   <label>    <input type="color" id="diffuse_color">diffuse color</label>   
-                   <label>    <input type="color" id="ambient_color">ambient color</label> 
-                   <label>    <input type="color" id="specular_color">specular color</label>   
-
-               </div>
-
-               <div class="config_group">
-
-                   <h5>Diffuse Frequency Modulation</h5> 
-                   <button id="diffuse_frequency_zero">Set to zero</button>
-
-                   <label>  <input type="color" id="diffuse_color_b"> diffuse color b</label>
-                   <label>  <input type="color" id="diffuse_color_c"> diffuse color c</label>
-                   <label>  <input type="color" id="diffuse_color_d"> diffuse color d</label> 
-
-               </div>
-
-               <div class="config_group">  
-               </div>
-
-        </div> 
- 
+    <select id="material" size="5">
+        <option value="0">Fractal Noise </option>
+        <option value="1">Normals       </option>
+        <option value="2">Red           </option>
+        <option value="3">Iteration     </option>
+        <option value="4">Spiral        </option>
+    </select>
 
     </div>
 
+    <div class="cl">
+
+        <input type="range" id="eps" min="0.0" max="0.05" >
+        <input type="range" id="d" min="0.0" max="500.0" >
+    
+    </div> 
+ 
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/109/three.min.js"></script>
 <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
-<script src="https://threejs.org/examples/js/math/ImprovedNoise.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script>
 
 <script src="ShaderLoader.js"></script>
-<script src="touchEvents.js"></script>
-<script src="noise.js"></script>
 <script src="textures.js"></script>
 <script src="render.js"></script>
 
