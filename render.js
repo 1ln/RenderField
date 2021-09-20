@@ -4,24 +4,20 @@ let canvas;
 let aspect;
 let renderer;
 
-let nhash,hash;  
+let hash;  
 let mouse, mouse_pressed;
 
 let epsilon;
 let trace_distance;
+let aa;
 
 let controls;
 
-let cam,scene,geometry,mesh,material;
-let fov;
-
-let delta;
-let clock;
+let cam,scene,geometry,mesh,shader_material,fov;
+let material,field;
 
 let uniforms;
 let render;
-
-let defines;
 
 function init() {
 
@@ -34,32 +30,29 @@ canvas.height = h;
 
 renderer = new THREE.WebGLRenderer({canvas:canvas});
 
+aa = 2;
 aspect = w/h;
 fov = 45.0;
 trace_distance = 500.0;
+epsilon = 0.0001;
+hash = 10095;
 
 cam = new THREE.PerspectiveCamera(fov,aspect,1,trace_distance);
 
-clock = new THREE.Clock(); 
-delta = 0.0;
-
-nhash = new Math.seedrandom();
-hash = nhash();
-$('#hash').val(hash.toFixed(8)); 
-
-cam.position.set(0.0,0.0,-5.);
+cam.position.set(0.0,2.0,-5.0);
 cam_target  = new THREE.Vector3(0.0);
 
-epsilon = 0.0001;
 $('#epsilon').val(epsilon);
+$('#hash').val(hash.toFixed(8));
+$('#trace_distance').val(trace_distance);
 
 controls = new THREE.OrbitControls(cam,canvas);
     controls.minDistance = 1.5;
-    controls.maxDistance = 25.;
+    controls.maxDistance = 25.0;
     controls.target = cam_target;
     controls.enableDamping = true;
     controls.enablePan = false; 
-    controls.enabled = true  ; 
+    controls.enabled = true; 
 
 scene = new THREE.Scene();
 geometry = new THREE.PlaneBufferGeometry(2,2);
@@ -69,14 +62,14 @@ uniforms = {
     "time"                : { value : 1.0 },
     "resolution"          : new THREE.Uniform(new THREE.Vector2(w,h)),
     "mouse"               : new THREE.Uniform(new THREE.Vector2()),
-    "aa"                  : { value : mouse_pressed },
+    "aa"                  : { value : aa },
     "camPos"              : new THREE.Uniform(new THREE.Vector3(cam_target)),
     "seed"                : { value: hash }, 
     "eps"                 : { value: epsilon },
     "trace_distance"      : { value: trace_distance },
-    
+    "field"               : { value: field },
+    "material"            : { value: material },
     "texture"             : { type : "t", value: texture }
-
 
 };   
 
@@ -85,7 +78,7 @@ init();
 
 ShaderLoader("render.vert","render.frag",
     function(vertex,fragment) {
-        material = new THREE.ShaderMaterial({
+        shader_material = new THREE.ShaderMaterial({
 
         uniforms : uniforms,
         vertexShader : vertex,
@@ -93,7 +86,7 @@ ShaderLoader("render.vert","render.frag",
         
         });
 
-    mesh = new THREE.Mesh(geometry,material);
+    mesh = new THREE.Mesh(geometry,shader_material);
 
     scene.add(mesh);
 
@@ -103,8 +96,6 @@ ShaderLoader("render.vert","render.frag",
     render = function(timestamp) {
         requestAnimationFrame(render);
     
-        delta = clock.getDelta();
-
         uniforms["time"                ].value = performance.now();
         uniforms["mouse"               ].value = mouse;
         uniforms["aa"                  ].value = aa;
@@ -131,7 +122,7 @@ $('#field').change(function() {
 });
 
 $('#material').change(function() {
-    color = $('#material').val();
+    material = $('#material').val();
 });
 
 $('#eps').change(function() {
