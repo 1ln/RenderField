@@ -1,4 +1,4 @@
-#version 330     
+#version es 300     
 
 // dolson
 out vec4 FragColor; 
@@ -181,23 +181,12 @@ vec3 rgbHsv(vec3 c) {
     return c.z * mix(vec3(1.),rgb,c.y);
 }
 
-vec3 contrast(vec3 c) {
-return smoothstep(0.,1.,c);
-}
-
 vec3 wbar(vec2 uv,vec3 fcol,vec3 col,float y,float h) {
     return mix(fcol,col,step(abs(uv.y-y),h));
 }
 
 vec3 hbar(vec2 uv,vec3 fcol,vec3 col,float x,float w) {
     return mix(fcol,col,step(abs(uv.x-x),w));
-}
-
-vec3 mouseCoord(vec3 color,vec3 col,float h) {
-     vec2 uv = (2.*gl_FragCoord.xy-resolution)/resolution.y;
-     vec2 m  = (2.*mouse - resolution.xy)/resolution.y;
-     return mix(color,col,smoothstep(h,0.,abs(uv.x-m.x)) +
-                          smoothstep(h,0.,abs(uv.y-m.y)));
 }
 
 vec2 boxBound(vec3 ro,vec3 rd,vec3 rad) {
@@ -214,11 +203,6 @@ vec3 repLim(vec3 p,float c,vec3 l) {
   
     vec3 q = p - c * clamp( floor((p/c)+0.5) ,-l,l);
     return q; 
-}
-
-vec2 repeat(vec2 p,float s) {
-     vec2 q = mod(p,s) - .5 * s;
-     return q;
 }
 
 vec3 repeat(vec3 p,vec3 s) {
@@ -304,24 +288,6 @@ vec3 refraction(vec3 a,vec3 n,float e) {
     if(dot(a,n) < 0.) { e = 1./e; }
     else { n = -n; }
     return refract(a,n,e);
-}
-
-float ambient(vec3 n) {
-    return clamp(0.5 + 0.5 * n.y,0.,1.);
-}
-
-float diffuse(vec3 n,vec3 l) {
-    return clamp(dot(n,l),0.0,1.0);
-}
-
-float specular(vec3 n,vec3 rd,vec3 l,float dif) {
-    vec3 h = normalize(l - rd);
-    return pow(clamp(dot(n,h),0.0,1.0),16.) * dif * 
-    (.04 + 0.9 * pow(clamp(1. + dot(h,rd),0.,1.),5.));
-}
-
-float fresnel(vec3 n,vec3 rd) {
-    return pow(clamp(1. + dot(n,rd),0.0,1.0),2.0);
 }
 
 float cell(vec2 x,float n) {
@@ -459,7 +425,6 @@ axis = normalize(axis);
         oc * axis.z * axis.z + c,0.,0.,0.,0.,1.);
 
 }
-
 
 vec3 rayCamDir(vec2 uv,vec3 ro,vec3 ta,float fov) {
 
@@ -776,7 +741,19 @@ float menger(vec3 p,int n,float s,float d) {
 vec2 scene(vec3 p) { 
 
 vec2 res = vec2(1.0,0.0);
-res = opu(res,vec2(icosahedron(p,1.),5.)); 
+float d = 1.;
+
+vec3 q = p;
+
+if(field == 0)
+    d = sphere(p,1.);
+if(field == 1)
+    p = repLim(p,5.,vec3(10.));
+    d = box(p,vec3(1.));
+
+
+
+res = opu(res,vec2(d,5.));
 
 return res;
 
