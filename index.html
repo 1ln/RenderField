@@ -2,7 +2,7 @@
 
 <head>
 
-<title>sdf renderer</title>
+<title>df demos</title>
 
 <meta name="viewport" content="width=device-width", user-scalable=no, minimum-scale=0.0 maximum-scale=0.0 /> 
 <meta name="theme-color" content="#000">
@@ -12,54 +12,46 @@
 
 </head>
 
+<canvas id="canvas"></canvas>
+
 <div id="gui_container"> 
+
+    <div class="cl">
+
+        <input type ="text" id="hash">
+        <button id="update_hash">update hash</button>
+
+    </div>
+   
+    <div class="cl">
+        
+    <select id="field" size="5" >
+        <option value="0">Log Radial     </option>
+        <option value="1">Box Repeat     </option>
+        <option value="2">Capsule Field  </option>
+        <option value="3">Torus Inverted </option>
+        <option value="4">Gyroid         </option>
+        <option value="5">Sphere box     </option>    
+    </select>
     
-    <div id="gui_scroll">
+    <select id="material" size="5">
+        <option value="0">Fractal Noise </option>
+        <option value="1">Normals       </option>
+        <option value="2">Red           </option>
+        <option value="3">Iteration     </option>
+        <option value="4">Spiral        </option>
+    </select>
 
-        <h3>Raymarching Demo</h3><br>
-
-        <div class="config_container">
-
-            <label>Demo </label>
-            <button id="hash">Update</button>
-  
-            <label>Steps    </label>  <input type="number" id="steps">
-            <label>Epsilon  </label>  <input type="number" id="eps">
-            <label>Distance </label>  <input type="number" id="dist">
-                 
-            <label>Light position x</label>  <input type="number" id="light_pos_x"> 
-            <label>Light position y</label>  <input type="number" id="light_pos_y">
-            <label>Light position z</label>  <input type="number" id="light_pos_z">
-
-            <label>Shadow Iterations </label> 
-            <input type="number" id="shad_iterations">
-
-            <label>Shadow Minimum </label>
-            <input type="number" id="shad_min">
-
-            <label>Shadow Maximum </label>
-            <input type="number" id="shad_max">            
-        
-            <label>Octaves</label>
-            <input type="number" id="octaves" >
-                     
-            <label>Frequency</label>      
-            <input type="number" id="frequency" step="0.001" >
-
-            <label>Cell iterations</label>
-            <input type="number" id="cell_iterations" >
-        
-            <label>Distance type</label>
-            <select id="cell_type" size="3" >
-                <option value="0">Euclidian</option>
-                <option value="1">Rectlinear</option>
-                <option value="2">Chess</option>
-            <select>
-        </div>
-        </div> 
     </div>
 
-<canvas id="canvas" > </canvas>
+    <div class="cl">
+
+        <input type="range" id="eps" min="0.0" max="0.05" >
+        <input type="range" id="d" min="0.0" max="500.0" >
+    
+    </div> 
+ 
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/109/three.min.js"></script>

@@ -8,147 +8,76 @@ let uniforms;
 
 let reset;
 
-let nhash,hash;  
-let tex_size;
-let tex;
-let n;
-let noise_texture;
+let hash;  
+let mouse, mouse_pressed;
 
-let mouse_pressed,mouse_held,mouse;
-let swipe_dir;
-
-let controls;
-
-let cam,scene,geometry,mesh,mat;
-
-let df;
-
-let cam_target;
-
-let light_pos;
+let epsilon;
+let trace_distance;
+let aa;
 
 let eps;
 let dist;
 let steps;
 
-let dif_noise;
+let cam,scene,geometry,mesh,shader_material,fov;
+let material,field;
 
-let octaves;
-let frequency;
-
-let cell_iterations;
-let cell_type;
-
-let shad_min;
-let shad_max;
-let shad_iterations;
-
-let delta;
-let clock;
-
+let uniforms;
+let render;
 
 function init() {
 
-    canvas  = $('#canvas')[0];
-    context = canvas.getContext('webgl2',{ antialias:false });
+canvas = $('#canvas')[0];
+w = window.innerWidth;
+h = window.innerHeight; 
 
-    w = window.innerWidth-352;
-    h = window.innerHeight; 
+canvas.width  = w;
+canvas.height = h;
 
-    canvas.width  = w;
-    canvas.height = h;
+renderer = new THREE.WebGLRenderer({canvas:canvas});
 
-    renderer = new THREE.WebGLRenderer({canvas:canvas,context:context});
+aa = 2;
+aspect = w/h;
+fov = 45.0;
+trace_distance = 500.0;
+epsilon = 0.0001;
+hash = 10095;
 
-    cam = new THREE.PerspectiveCamera(45.,w/h,0.0,1000.0);
-    raycaster = new THREE.Raycaster();
+cam = new THREE.PerspectiveCamera(fov,aspect,1,trace_distance);
 
-    clock = new THREE.Clock(); 
-    delta = 0.0;
+cam.position.set(0.0,2.0,-5.0);
+cam_target  = new THREE.Vector3(0.0);
 
-    nhash = new Math.seedrandom();
-    hash = nhash();
- 
-    updateNoiseTex();
+$('#epsilon').val(epsilon);
+$('#hash').val(hash.toFixed(8));
+$('#trace_distance').val(trace_distance);
 
-    mouse = new THREE.Vector2(0.0); 
-    mouse_pressed = 0;
-    mouse_held = 0;
-    swipe_dir = 0;
+controls = new THREE.OrbitControls(cam,canvas);
+    controls.minDistance = 1.5;
+    controls.maxDistance = 25.0;
+    controls.target = cam_target;
+    controls.enableDamping = true;
+    controls.enablePan = false; 
+    controls.enabled = true; 
 
-    cam.position.set(0.0,0.0,5.0); 
-    cam_target  = new THREE.Vector3(0.0);
-    light_pos   = new THREE.Vector3(0.0,0.0,-10.0);
-    
-    controls = new THREE.OrbitControls(cam,canvas);
+scene = new THREE.Scene();
+geometry = new THREE.PlaneBufferGeometry(2,2);
 
-        controls.minDistance = 0.0;
-        controls.maxDistance = 15.0;
-        controls.target = cam_target;
-        controls.enableDamping = true;
-        controls.enablePan = false; 
-        controls.enabled = true;
+uniforms = {
 
-    scene = new THREE.Scene();
-    geometry = new THREE.PlaneBufferGeometry(2,2);
+    "time"                : { value : 1.0 },
+    "resolution"          : new THREE.Uniform(new THREE.Vector2(w,h)),
+    "mouse"               : new THREE.Uniform(new THREE.Vector2()),
+    "aa"                  : { value : aa },
+    "camPos"              : new THREE.Uniform(new THREE.Vector3(cam_target)),
+    "seed"                : { value: hash }, 
+    "eps"                 : { value: epsilon },
+    "trace_distance"      : { value: trace_distance },
+    "field"               : { value: field },
+    "material"            : { value: material },
+    "texture"             : { type : "t", value: texture }
 
-    eps = 0.0001;
-    dist = 1000.;
-    steps = 64;
-
-    df = 0;
-       
-    octaves = 4;
-    frequency = .5;
-    
-    cell_iterations = 10.;
-    cell_type = 0;
-
-    shad_iterations = 16;
-    shad_min = 0.002;
-    shad_max = 5.;
-
-    $('#eps').val(eps);
-    $('#dist').val(dist);
-    $('#steps').val(steps);
-
-    $('#octaves').val(octaves);
-    $('#frequency').val(frequency);    
-    $('#cell_iterations').val(cell_iterations);
-    $('#cell_type').val(cell_type);
-
-    $('#shad_min').val(shad_min);
-    $('#shad_max').val(shad_max);
-    $('#shad_iterations').val(shad_iterations);    
-
-    $('#light_pos_x').val(light_pos.x);
-    $('#light_pos_y').val(light_pos.y);
-    $('#light_pos_z').val(light_pos.z);
-
-    uniforms = {
-
-        "u_time"                : { value : 1.0 },
-        "u_resolution"          : new THREE.Uniform(new THREE.Vector2(w,h)),
-        "u_mouse"               : new THREE.Uniform(new THREE.Vector2()),
-        "u_mouse_pressed"       : { value : mouse_pressed },
-        "u_swipe_dir"           : { value : swipe_dir }, 
-        "u_cam_target"          : new THREE.Uniform(new THREE.Vector3(cam_target)),
-        "u_light_pos"           : new THREE.Uniform(new THREE.Vector3(light_pos)),
-        "u_hash"                : { value: hash },
-        "u_df"                  : { value: df },
-        "u_eps"                 : { value: eps },
-        "u_dist"                : { value: dist },
-        "u_steps"               : { value: steps },
-        "u_octaves"             : { value: octaves },
-        "u_frequency"           : { value: frequency },
-        "u_cell_iterations"     : { value: cell_iterations },
-        "u_cell_type"           : { value: cell_type },
-        "u_shad_iterations"     : { value: shad_iterations },
-        "u_shad_min"            : { value: shad_min },
-        "u_shad_max"            : { value: shad_max },
-        "u_noise_tex"           : { type:"t", value: noise_texture }
-
-    };   
+};   
 
 }
 
@@ -157,16 +86,15 @@ init();
 ShaderLoader("render.vert","render.frag",
 
     function(vertex,fragment) {
+        shader_material = new THREE.ShaderMaterial({
 
-        material = new THREE.ShaderMaterial({
-
-            uniforms : uniforms,
-            vertexShader : vertex,
-            fragmentShader : fragment
-
+        uniforms : uniforms,
+        vertexShader : vertex,
+        fragmentShader : fragment
+        
         });
 
-        mesh = new THREE.Mesh(geometry,material);
+    mesh = new THREE.Mesh(geometry,shader_material);
 
         scene.add(mesh);
        
@@ -179,109 +107,39 @@ ShaderLoader("render.vert","render.frag",
 
         requestAnimationFrame(render);
     
-        uniforms["u_time"                ].value = performance.now();
-        uniforms["u_mouse"               ].value = mouse;
-        uniforms["u_mouse_pressed"       ].value = mouse_pressed;
-        uniforms["u_swipe_dir"           ].value = swipe_dir;
-        uniforms["u_cam_target"          ].value = cam_target;
-        uniforms["u_hash"                ].value = hash;
-        uniforms["u_eps"                 ].value = eps;         
-        uniforms["u_dist"                ].value = dist;
-        uniforms["u_steps"               ].value = steps;
-        uniforms["u_octaves"             ].value = octaves;
-        uniforms["u_frequency"           ].value = frequency;
-        uniforms["u_cell_iterations"     ].value = cell_iterations;
-        uniforms["u_cell_type"           ].value = cell_type;
-        uniforms["u_shad_iterations"     ].value = shad_iterations;  
-        uniforms["u_shad_max"            ].value = shad_max;  
-        uniforms["u_shad_min"            ].value = shad_min;
-        uniforms["u_df"                  ].value = df;
-        uniforms["u_light_pos"           ].value = light_pos;
-        uniforms["u_noise_tex"           ].value = noise_texture;       
+        uniforms["time"                ].value = performance.now();
+        uniforms["mouse"               ].value = mouse;
+        uniforms["aa"                  ].value = aa;
+        uniforms["camPos"              ].value = camPos;
+        uniforms["seed"                ].value = hash;
+        uniforms["eps"                 ].value = epsilon;
+        uniforms["trace_distance"      ].value = trace_distance;
+        uniforms["field"               ].value = field;
+        uniforms["material"            ].value = material;
+        uniforms["texture"             ].value = texture;         
 
         controls.update();
         renderer.render(scene,cam);
 
-    
+$('#update_hash').click(function() {
+    hash = parseFloat($('#hash').val());
+}); 
 
-        } 
-       
-    render();
-
-    }
-) 
-
-function updateNoiseTex() {
-
-
-    tex_size = 16 * 16;
-    tex = new Uint8Array(3 * tex_size);
-
-        for(let i = 0; i < tex_size; i++) {
-                           
-         
-                let s =  i * 3;
-
-                tex[s]     = Math.floor( 255 * nhash()    );
-                tex[s+1]   = Math.floor( 255 * nhash()    );
-                tex[s+2]   = Math.floor( 255 * nhash()    );   
-                
-            }
-               
-
-     noise_texture = new THREE.DataTexture(tex,16,16,THREE.RGBFormat);
-     noise_texture.magFilter = THREE.LinearFilter;
-     console.log(noise_texture);
-}
-
-$('#canvas').keydown(function(event) {
- 
-    if(event.which == 37) {
-        event.preventDefault(); 
-   
-    }
-
-    if(event.which == 38 ) {
-        event.preventDefault();
-
-    }
-    
-    if(event.which == 39 ) {
-        event.preventDefault();
-
-    }
-
-    if(event.which == 40 ) {
-        event.preventDefault();
-
-    }
-
+$('#field').change(function() {
+    field = $('#field').val();
 });
 
-$('#canvas').mousedown(function() { 
- 
-    mouse_pressed = true;
-   
-    reset = setTimeout(function() {
-    mouse_held = true; 
-
-
-    },5000);
-
-
+$('#material').change(function() {
+    material = $('#material').val();
 });
 
-$('#canvas').mouseup(function() {
-    
-    mouse_pressed = false;    
-    mouse_held = false;
-    
+$('#eps').change(function() {
+    epsilon = parseFloat($('#eps').val());
+});
 
-    if(reset) {
-        clearTimeout(reset);
-    };
-
-});        
+$('#d').change(function() {
+    trace_distance = parseFloat($('#d').val());
+});
 
 window.addEventListener('mousemove',onMouseMove,false);
 
@@ -289,49 +147,3 @@ function onMouseMove(event) {
     mouse.x = (event.clientX / w) * 2.0 - 1.0; 
     mouse.y = -(event.clientY / h) * 2.0 + 1.0;
 }
-
-$('#hash').click(function() {
-    hash = nhash(); 
-});
-
-$('#df').change(function() {
-    df = parseInt($('#df').val());
-});
-
-$('#dif_noise').change(function() {
-   dif_noise = parseInt($('#dif_noise').val());
-});
-
-$('#cell_type').change(function() {
-   cell_distance_type = parseInt($('#cell_type').val());
-});
-
-
-$('input[type=number]').on("input",function() {
-
-
-   eps         = parseFloat($('#eps').val());
-   dist        = parseInt($('#dist').val());
-   steps       = parseInt($('#steps').val());
-
-   octaves     = parseInt($('#octaves').val());
-   frequency   = parseFloat($('#frequency').val());
-   cell_iterations = parseFloat($('#cell_iterations').val());
-
-   light_pos.x = parseFloat($('#light_pos_x').val());
-   light_pos.y = parseFloat($('#light_pos_y').val());
-   light_pos.z = parseFloat($('#light_pos_z').val());
-
-   shad_min = parseFloat($('#shad_min').val());
-   shad_max = parseFloat($('#shad_max').val());
-   shad_iterations = parseInt($('#shad_iterations').val());
-
-
-});
-
-
-
-
-
-
-
