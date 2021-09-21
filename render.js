@@ -83,7 +83,7 @@ uniforms = {
 
 init();
 
-ShaderLoader("render.vert","render.frag",
+ShaderLoader("render.vert","render.glsl",
 
     function(vertex,fragment) {
         shader_material = new THREE.ShaderMaterial({
@@ -120,6 +120,9 @@ ShaderLoader("render.vert","render.frag",
 
         controls.update();
         renderer.render(scene,cam);
+    
+        }
+    });
 
 $('#update_hash').click(function() {
     hash = parseFloat($('#hash').val());
@@ -140,7 +143,7 @@ $('#eps').change(function() {
 $('#d').change(function() {
     trace_distance = parseFloat($('#d').val());
 });
-
+    
 window.addEventListener('mousemove',onMouseMove,false);
 
 function onMouseMove(event) {
