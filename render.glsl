@@ -741,15 +741,41 @@ float menger(vec3 p,int n,float s,float d) {
 vec2 scene(vec3 p) { 
 
 vec2 res = vec2(1.0,0.0);
+
 float d = 1.;
 
+float t = time,
+      s = .0001;
+      
 vec3 q = p;
 
-if(field == 0)
-    d = sphere(p,1.);
+if(field == 0)      
+    p.xz *= rot2(easeInOut3(t*s)*.005);
+    p.yz *= rot2(easeIn4(t*s)*.0005);
+    d = mix(sphere(p,.25),box(q,vec3(1.)),sin(t*.0001)*.5+.5);
 if(field == 1)
-    p = repLim(p,5.,vec3(10.));
-    d = box(p,vec3(1.));
+    p.yz *= rot2(t*s)*.0001;
+    p = repLim(p/.05,5.,vec3(10.))*.05;
+    d = box(p/.05,vec3(1.))*.05;
+if(field == 2)
+    p.yz *= rot2(t*s);
+    d = torus(p,vec2(1.,.5));
+if(field == 3)
+    p = repLim(p,3.,vec3(0.,2.,0.));
+    d = capsule(p,vec3(1.),vec3(1.5),.5);
+if(field == 4)
+    p.xy *= rot2(t*s);
+    d = smod(sphere(p,.5),box(p,vec3(1.)),.1);
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -882,9 +908,6 @@ vec3 render(inout vec3 ro,inout vec3 rd,inout vec3 ref) {
 
     if(d.y >= 0.) {
 
-
-        col = .2+.2*sin(2.*d.y+vec3(2.,3.,4.)); 
-
         dif *= shadow(p,l);
         ref *= shadow(p,r);
 
@@ -893,24 +916,25 @@ vec3 render(inout vec3 ro,inout vec3 rd,inout vec3 ref) {
         linear += fre * vec3(.025,.01,.03);
         linear += .25 * spe * vec3(0.04,0.05,.05)*ref;
 
-        if(d.y == 5.) {
+        if(material == 0)
+            col += f3(p);
 
-            p *= .25;
-
+        if(material == 1)
             col += fmCol(dd(p),vec3(f3(p),h11(45.),h11(124.)),
                    vec3(h11(235.),f3(p),h11(46.)),
                    vec3(h11(245.),h11(75.),f3(p)),
                    vec3(1.));
+         
+        if(material == 2)
+            col = vec3(n); 
 
+        if(material == 3)
+            col = vec3(1.,0.,0.);
+            
+        if(material == 4)
             col += mix(col,cell(p+f3(p*sin3(p,h11(100.)*45.
             )),12.)*col,rd.y*rd.x*col.z)*.01;
         
-            ref = vec3(0.005);     
-
-    
-        }    
- 
-
         ro = p+n*.001*2.5;
         rd = r;
 
