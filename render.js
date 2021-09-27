@@ -21,9 +21,7 @@ let steps;
 
 let cam,scene,geometry,mesh,shader_material,fov;
 let material,field;
-
-let uniforms;
-let render;
+let cam_target;
 
 function init() {
 
@@ -69,7 +67,7 @@ uniforms = {
     "resolution"          : new THREE.Uniform(new THREE.Vector2(w,h)),
     "mouse"               : new THREE.Uniform(new THREE.Vector2()),
     "aa"                  : { value : aa },
-    "camPos"              : new THREE.Uniform(new THREE.Vector3(cam_target)),
+    "camPos"              : new THREE.Uniform(new THREE.Vector3(cam.position)),
     "seed"                : { value: hash }, 
     "eps"                 : { value: epsilon },
     "trace_distance"      : { value: trace_distance },

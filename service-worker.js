@@ -8,11 +8,9 @@ event.waitUntil(
             [
                 'index.html',
                 'stylesheet.css',
-                'noise.js',
-                'textures.js',
-                'touchEvents.js',
+                'texture.js',
                 'render.vert',
-                'render.frag',
+                'render.glsl',
                 'ShaderLoader.js',
                 'render.js'
             ]
