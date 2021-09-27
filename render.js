@@ -24,6 +24,7 @@ let material,field;
 
 let cam_target;
 let controls;
+let texture;
 
 function init() {
 
@@ -35,6 +36,7 @@ canvas.width  = w;
 canvas.height = h;
 
 renderer = new THREE.WebGLRenderer({canvas:canvas});
+texture = new Texture(w,h);
 
 aa = 2;
 aspect = w/h;
