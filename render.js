@@ -21,7 +21,9 @@ let steps;
 
 let cam,scene,geometry,mesh,shader_material,fov;
 let material,field;
+
 let cam_target;
+let controls;
 
 function init() {
 
