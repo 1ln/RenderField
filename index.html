@@ -12,19 +12,18 @@
 
 </head>
 
-<canvas id="canvas"></canvas>
+<div id="container"> 
 
-<div id="gui_container"> 
+    <canvas id="canvas"></canvas>
+
+    <div id="config">
 
     <div class="cl">
-
         <input type ="text" id="hash">
         <button id="update_hash">update hash</button>
-
     </div>
    
     <div class="cl">
-        
     <select id="field" size="5" >
         <option value="0">Box Sphere Morphing     </option>
         <option value="1">Box Repeat              </option>
@@ -33,7 +32,9 @@
         <option value="4">Gyroid                  </option>
         <option value="5">Sphere box              </option>    
     </select>
-    
+    </div>
+
+    <div class="cl">
     <select id="material" size="5">
         <option value="0">Fractal Noise </option>
         <option value="1">Normals       </option>
@@ -41,16 +42,17 @@
         <option value="3">Iteration     </option>
         <option value="4">Spiral        </option>
     </select>
-
     </div>
 
     <div class="cl">
-
-        <input type="range" id="eps" min="0.0" max="0.05" >
+        <input type="range" id="eps" min="0.0" max="1.0" >
+    </div>
+    <div class="cl">
         <input type="range" id="d" min="0.0" max="500.0" >
-    
     </div> 
  
+    </div>
+
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
