@@ -1,29 +1,33 @@
 /*minimal css*/
 
 html, body {
-height:100%;
-margin:0;
+    height:100%;
+    margin:0;
+}
+
+select {
+    width:125px;
 }
 
 #canvas {
-position:fixed;
-width:100%;
-height:100%;
-display:block;
-z-index: -1;
+    position:fixed;
+    width:100%;
+    height:100%;
+    display:block;
+    z-index: -1;
 }
 
 #container {
-position:relative;
-width:100%;
-height:100%;
+    position:relative;
+    width:100%;
+    height:100%;
 }
 
 #config {
-left:0;
-top:0;
+   left:0;
+   top:0;
 }
 
 #cl {
-margin:5px;
+   margin:15px;
 }
