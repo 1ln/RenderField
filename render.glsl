@@ -1,4 +1,4 @@
-#version es 300     
+#version 300 es     
 
 // dolson
 out vec4 FragColor; 
