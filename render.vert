@@ -1,5 +1,3 @@
-#version 300 es
-
 varying vec2 uVu;
 
 void main() {

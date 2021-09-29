@@ -43,13 +43,13 @@ texture = new Texture(w,h);
 aa = 2;
 aspect = w/h;
 fov = 45.0;
-trace_distance = 500.0;
-epsilon = 0.0001;
+trace_distance = 125;
+epsilon = 0.001;
 hash = 10095;
 
 cam = new THREE.PerspectiveCamera(fov,aspect,1,trace_distance);
 
-cam.position.set(0.0,2.0,-5.0);
+cam.position.set(0.0,1.0,-3.0);
 cam_target  = new THREE.Vector3(0.0);
 
 $('#epsilon').val(epsilon);
@@ -144,7 +144,7 @@ $('#eps').change(function() {
 });
 
 $('#d').change(function() {
-    trace_distance = parseFloat($('#d').val());
+    trace_distance = parseInt($('#d').val());
 });
     
 window.addEventListener('mousemove',onMouseMove,false);

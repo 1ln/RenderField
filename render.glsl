@@ -1,8 +1,5 @@
-#version 300 es     
-
-// dolson
-out vec4 FragColor; 
-
+//Shader demos
+//dolson
 uniform vec2 resolution;
 
 uniform float time;
@@ -719,7 +716,7 @@ vec2 trace(vec3 ro,vec3 rd) {
     float s = 0.;
     float e = 25.;  
 
-    for(int i = 0; i < trace_distance i++) {
+    for(int i = 0; i < trace_distance; i++) {
 
         vec3 p = ro + s * rd;
         vec2 dist = scene(p);
@@ -905,7 +902,7 @@ for(int k = 0; k < aa; k++ ) {
 }
    
    color /= float(aa*aa);
-   FragColor = vec4(color,1.0);
+   gl_FragColor = vec4(color,1.0);
  
 
 }
