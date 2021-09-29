@@ -8,7 +8,7 @@ uniform vec2 resolution;
 uniform float time;
 uniform int aa; 
 uniform float eps;
-uniform float trace_distance;
+uniform int trace_distance;
 
 uniform vec3 camPos;
 uniform sampler2D tex;
@@ -181,10 +181,6 @@ vec3 rgbHsv(vec3 c) {
     return c.z * mix(vec3(1.),rgb,c.y);
 }
 
-vec3 wbar(vec2 uv,vec3 fcol,vec3 col,float y,float h) {
-    return mix(fcol,col,step(abs(uv.y-y),h));
-}
-
 vec3 hbar(vec2 uv,vec3 fcol,vec3 col,float x,float w) {
     return mix(fcol,col,step(abs(uv.x-x),w));
 }
@@ -252,7 +248,6 @@ vec2 sfold(vec2 p) {
     return p-(g-sqrt(p*p+.01))*v;
 }
 
-
 vec2 radmod(vec2 p,float r) {
     float n = radians(360.)/r;
     float a = atan(p.x,p.y)+n*.5;
@@ -270,24 +265,6 @@ vec3 twist(vec3 p,float k) {
 
 float layer(float d,float h) {
     return abs(d) - h;
-}
-
-vec3 fog(vec3 col,vec3 fog_col,float fog_dist,float fog_de) {
-    float fog_depth = 1. - exp(-fog_dist * fog_de);
-    return mix(col,fog_col,fog_depth);
-}
-
-vec3 scatter(vec3 col,vec3 tf,vec3 ts,vec3 rd,vec3 l,float de) {
-    float fog_depth  = 1. - exp(-0.000001 * de);
-    float light_depth = max(dot(rd,l),0.);
-    vec3 fog_col = mix(tf,ts,pow(light_depth,8.));
-    return mix(col,fog_col,light_depth);
-}
-
-vec3 refraction(vec3 a,vec3 n,float e) {
-    if(dot(a,n) < 0.) { e = 1./e; }
-    else { n = -n; }
-    return refract(a,n,e);
 }
 
 float cell(vec2 x,float n) {
@@ -393,7 +370,7 @@ float dd(vec3 p) {
     return f4(p + 4. * r);
 }
 
-mat2 rot(float a) {
+mat2 rot2(float a) {
 
     float c = cos(a);
     float s = sin(a);
@@ -447,55 +424,6 @@ mat3 camOrthographic(vec3 ro,vec3 ta,float r) {
 
      return mat3(u,v,w); 
 } 
-
-float circle(vec2 p,float r) {
-    return length(p) - r;
-}
-
-float ring(vec2 p,float r,float w) {
-    return abs(length(p) - r) - w;
-}
-
-float eqTriangle(vec2 p,float r) { 
-
-     const float k = sqrt(3.);
-   
-     p.x = abs(p.x) - 1.;
-     p.y = p.y + 1./k;
-
-     if(p.x + k * p.y > 0.) {
-         p = vec2(p.x - k * p.y,-k * p.x - p.y)/2.;
-     }
-
-     p.x -= clamp(p.x,-2.,0.);
-     return -length(p) * sign(p.y);    
-
-}
- 
-float rect(vec2 p,vec2 b) {
-    vec2 d = abs(p)-b;
-    return length(max(d,0.)) + min(max(d.x,d.y),0.);
-}
-
-float roundRect(vec2 p,vec2 b,vec4 r) {
-    r.xy = (p.x > 0.) ? r.xy : r.zw;
-    r.x  = (p.y > 0.) ? r.x  : r.y;
-    vec2 q = abs(p) - b + r.x;
-    return min(max(q.x,q.y),0.) + length(max(q,0.)) - r.x;
-}
-
-float rhombus(vec2 p,vec2 b) {
-    vec2 q = abs(p);
-    float h = clamp(-2. * ndot(q,b)+ndot(b,b) / dot(b,b),-1.,1.);
-    float d = length(q - .5 * b * vec2(1.- h,1. + h));
-    return d * sign(q.x*b.y + q.y*b.x - b.x*b.y);  
-}
-
-float segment(vec2 p,vec2 a,vec2 b) {
-    vec2 pa = p - a, ba = b - a;
-    float h = clamp(dot(pa,ba)/dot(ba,ba),0.,1.);  
-    return length(pa - ba * h);
-}
 
 float sphere(vec3 p,float r) { 
      
@@ -749,29 +677,28 @@ float t = time,
       
 vec3 q = p;
 
-if(field == 0)      
+if(field == 0) {
     p.xz *= rot2(easeInOut3(t*s)*.005);
     p.yz *= rot2(easeIn4(t*s)*.0005);
     d = mix(sphere(p,.25),box(q,vec3(1.)),sin(t*.0001)*.5+.5);
-if(field == 1)
+}
+if(field == 1) {
     p.yz *= rot2(t*s)*.0001;
     p = repLim(p/.05,5.,vec3(10.))*.05;
     d = box(p/.05,vec3(1.))*.05;
-if(field == 2)
+}
+if(field == 2) {
     p.yz *= rot2(t*s);
     d = torus(p,vec2(1.,.5));
-if(field == 3)
+}
+if(field == 3) {
     p = repLim(p,3.,vec3(0.,2.,0.));
     d = capsule(p,vec3(1.),vec3(1.5),.5);
-if(field == 4)
+}
+if(field == 4) {
     p.xy *= rot2(t*s);
     d = smod(sphere(p,.5),box(p,vec3(1.)),.1);
-
-
-
-
-
-
+}
 
 
 
@@ -792,12 +719,12 @@ vec2 trace(vec3 ro,vec3 rd) {
     float s = 0.;
     float e = 25.;  
 
-    for(int i = 0; i < 255; i++) {
+    for(int i = 0; i < trace_distance i++) {
 
         vec3 p = ro + s * rd;
         vec2 dist = scene(p);
    
-        if(abs(dist.x) < EPS || e <  dist.x ) { break; }
+        if(abs(dist.x) < eps || e <  dist.x ) { break; }
         s += dist.x;
         d = dist.y;
 
@@ -817,7 +744,7 @@ float reflection(vec3 ro,vec3 rd ) {
     for(int i = 0; i < 125; i++ ) {
         float h = scene(ro + rd * depth).x;
 
-        if(h < EPS) { return depth; }
+        if(h < eps) { return depth; }
         
         depth += h;
     }
@@ -842,7 +769,7 @@ float shadow(vec3 ro,vec3 rd ) {
         ph = h;
         t += h;
     
-        if(res < EPS || t > 12.) { break; }
+        if(res < eps || t > 12.) { break; }
 
         }
 
@@ -869,7 +796,7 @@ float calcAO(vec3 p,vec3 n) {
 
 vec3 calcNormal(vec3 p) {
 
-    vec2 e = vec2(1.0,-1.0) * EPS;
+    vec2 e = vec2(1.0,-1.0) * eps;
 
     return normalize(vec3(
     vec3(e.x,e.y,e.y) * scene(p + vec3(e.x,e.y,e.y)).x +
@@ -883,7 +810,6 @@ vec3 calcNormal(vec3 p) {
 
 vec3 render(inout vec3 ro,inout vec3 rd,inout vec3 ref) {
 
-
     vec2 d = trace(ro, rd);
     vec3 p = ro + rd * d.x;
     vec3 n = calcNormal(p);
@@ -894,7 +820,8 @@ vec3 render(inout vec3 ro,inout vec3 rd,inout vec3 ref) {
     vec3 col = vec3(.5);
 
     vec3 l = normalize(vec3(10.,0.,10.));
-    l.xz *= rot(time*.0001);
+    l.xz *= rot2(time*.0001);
+
     float rad = dot(rd,l);
     col += col * vec3(.5,.12,.25) * expStep(rad,100.);
     col += col * vec3(.5,.1,.15) * expStep(rad,25.);
@@ -916,25 +843,30 @@ vec3 render(inout vec3 ro,inout vec3 rd,inout vec3 ref) {
         linear += fre * vec3(.025,.01,.03);
         linear += .25 * spe * vec3(0.04,0.05,.05)*ref;
 
-        if(material == 0)
+        if(material == 0) {
             col += f3(p);
+        }
 
-        if(material == 1)
+        if(material == 1) {
             col += fmCol(dd(p),vec3(f3(p),h11(45.),h11(124.)),
                    vec3(h11(235.),f3(p),h11(46.)),
                    vec3(h11(245.),h11(75.),f3(p)),
                    vec3(1.));
-         
-        if(material == 2)
-            col = vec3(n); 
+        }
 
-        if(material == 3)
+        if(material == 2) {
+            col = vec3(n); 
+        }
+
+        if(material == 3) {
             col = vec3(1.,0.,0.);
-            
-        if(material == 4)
+        }
+
+        if(material == 4) {
             col += mix(col,cell(p+f3(p*sin3(p,h11(100.)*45.
             )),12.)*col,rd.y*rd.x*col.z)*.01;
-        
+        }
+
         ro = p+n*.001*2.5;
         rd = r;
 
@@ -972,7 +904,7 @@ for(int k = 0; k < aa; k++ ) {
    }
 }
    
-   color /= float(AA*AA);
+   color /= float(aa*aa);
    FragColor = vec4(color,1.0);
  
 

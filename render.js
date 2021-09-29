@@ -29,13 +29,15 @@ let texture;
 function init() {
 
 canvas = $('#canvas')[0];
+context = canvas.getContext('webgl2');
+
 w = window.innerWidth;
 h = window.innerHeight; 
 
 canvas.width  = w;
 canvas.height = h;
 
-renderer = new THREE.WebGLRenderer({canvas:canvas});
+renderer = new THREE.WebGLRenderer({canvas:canvas,context:context });
 texture = new Texture(w,h);
 
 aa = 2;
@@ -105,26 +107,25 @@ ShaderLoader("render.vert","render.glsl",
 
         render = function(timestamp) {
       
-        raycaster.setFromCamera(mouse,cam);
-
         requestAnimationFrame(render);
     
         uniforms["time"                ].value = performance.now();
         uniforms["mouse"               ].value = mouse;
         uniforms["aa"                  ].value = aa;
-        uniforms["camPos"              ].value = camPos;
+        uniforms["camPos"              ].value = cam.position;
         uniforms["seed"                ].value = hash;
         uniforms["eps"                 ].value = epsilon;
         uniforms["trace_distance"      ].value = trace_distance;
         uniforms["field"               ].value = field;
         uniforms["material"            ].value = material;
-        uniforms["texture"             ].value = texture;         
+        uniforms["texture"             ].value = texture;  
 
         controls.update();
         renderer.render(scene,cam);
     
         }
-    });
+        render();
+    })
 
 $('#update_hash').click(function() {
     hash = parseFloat($('#hash').val());
