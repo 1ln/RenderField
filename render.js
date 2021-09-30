@@ -6,25 +6,10 @@ let renderer;
 let render;
 let uniforms;
 
-let reset;
-
 let hash;  
-let mouse, mouse_pressed;
-
-let epsilon;
-let trace_distance;
-let aa;
-
-let eps;
-let dist;
-let steps;
-
 let cam,scene,geometry,mesh,shader_material,fov;
 let material,field;
-
-let cam_target;
 let controls;
-let texture;
 
 function init() {
 
@@ -34,32 +19,17 @@ context = canvas.getContext('webgl2');
 w = window.innerWidth;
 h = window.innerHeight; 
 
-canvas.width  = w;
-canvas.height = h;
-
 renderer = new THREE.WebGLRenderer({canvas:canvas,context:context });
-texture = new Texture(w,h);
 
-aa = 2;
-aspect = w/h;
-fov = 45.0;
-trace_distance = 125;
-epsilon = 0.001;
 hash = 10095;
 
-cam = new THREE.PerspectiveCamera(fov,aspect,1,trace_distance);
+cam = new THREE.PerspectiveCamera(45.,w/h,0.,1.);
 
-cam.position.set(0.0,1.0,-3.0);
-cam_target  = new THREE.Vector3(0.0);
-
-$('#epsilon').val(epsilon);
 $('#hash').val(hash.toFixed(8));
-$('#trace_distance').val(trace_distance);
 
 controls = new THREE.OrbitControls(cam,canvas);
     controls.minDistance = 1.5;
     controls.maxDistance = 25.0;
-    controls.target = cam_target;
     controls.enableDamping = true;
     controls.enablePan = false; 
     controls.enabled = true; 
@@ -71,16 +41,9 @@ uniforms = {
 
     "time"                : { value : 1.0 },
     "resolution"          : new THREE.Uniform(new THREE.Vector2(w,h)),
-    "mouse"               : new THREE.Uniform(new THREE.Vector2()),
-    "aa"                  : { value : aa },
-    "camPos"              : new THREE.Uniform(new THREE.Vector3(cam.position)),
     "seed"                : { value: hash }, 
-    "eps"                 : { value: epsilon },
-    "trace_distance"      : { value: trace_distance },
     "field"               : { value: field },
-    "material"            : { value: material },
-    "texture"             : { type : "t", value: texture }
-
+    "material"            : { value: material }
 };   
 
 }
@@ -110,15 +73,8 @@ ShaderLoader("render.vert","render.glsl",
         requestAnimationFrame(render);
     
         uniforms["time"                ].value = performance.now();
-        uniforms["mouse"               ].value = mouse;
-        uniforms["aa"                  ].value = aa;
-        uniforms["camPos"              ].value = cam.position;
-        uniforms["seed"                ].value = hash;
-        uniforms["eps"                 ].value = epsilon;
-        uniforms["trace_distance"      ].value = trace_distance;
         uniforms["field"               ].value = field;
         uniforms["material"            ].value = material;
-        uniforms["texture"             ].value = texture;  
 
         controls.update();
         renderer.render(scene,cam);
@@ -128,7 +84,7 @@ ShaderLoader("render.vert","render.glsl",
     })
 
 $('#update_hash').click(function() {
-    hash = parseFloat($('#hash').val());
+    hash = parseInt($('#hash').val());
 }); 
 
 $('#field').change(function() {
@@ -138,18 +94,3 @@ $('#field').change(function() {
 $('#material').change(function() {
     material = $('#material').val();
 });
-
-$('#eps').change(function() {
-    epsilon = parseFloat($('#eps').val());
-});
-
-$('#d').change(function() {
-    trace_distance = parseInt($('#d').val());
-});
-    
-window.addEventListener('mousemove',onMouseMove,false);
-
-function onMouseMove(event) {
-    mouse.x = (event.clientX / w) * 2.0 - 1.0; 
-    mouse.y = -(event.clientY / h) * 2.0 + 1.0;
-}

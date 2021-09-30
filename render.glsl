@@ -1,20 +1,15 @@
-//Shader demos
+//fragment shader demos
 //dolson
+
 uniform vec2 resolution;
 
 uniform float time;
-uniform int aa; 
-uniform float eps;
-uniform int trace_distance;
-
-uniform vec3 camPos;
-uniform sampler2D tex;
 uniform int seed;
-
-uniform vec2 mouse;
-
 uniform int field;
 uniform int material;
+
+const int aa = 2;
+const float eps = .001;
 
 float h11(float p) {
     uvec2 n = uint(int(p)) * uvec2(1391674541U,seed);
@@ -714,9 +709,9 @@ vec2 trace(vec3 ro,vec3 rd) {
     
     float d = -1.0;
     float s = 0.;
-    float e = 25.;  
+    float e = 325.;  
 
-    for(int i = 0; i < trace_distance; i++) {
+    for(int i = 0; i < 125 i++) {
 
         vec3 p = ro + s * rd;
         vec2 dist = scene(p);
@@ -878,7 +873,7 @@ void main() {
 vec3 color = vec3(0.);
 
 vec3 ta = vec3(0.);
-vec3 ro = camPos;
+vec3 ro = vec3(0.,0.,5.);
 
 for(int k = 0; k < aa; k++ ) {
    for(int l = 0; l < aa; l++) {
