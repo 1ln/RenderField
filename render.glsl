@@ -666,7 +666,9 @@ float d = 1.;
 
 float t = time,
       s = .0001;
-      
+
+float scl = 0.5;
+
 vec3 q = p;
 
 if(field == 0) {
@@ -675,17 +677,22 @@ if(field == 0) {
     d = mix(sphere(p,.25),box(q,vec3(1.)),sin(t*.0001)*.5+.5);
 }
 if(field == 1) {
-    p.yz *= rot2(t*s)*.0001;
-    p = repLim(p/.05,5.,vec3(10.))*.05;
-    d = box(p/.05,vec3(1.))*.05;
+    scl = .25;
+    p.yz *= rot2(t*s);
+    p.xz *= rot2(t*s*.05);
+    p = repLim(p/scl,2.,vec3(3.))*scl;
+    d = box(p/scl,vec3(.5)*scl;
 }
 if(field == 2) {
     p.yz *= rot2(t*s);
+    p.x *= sin(t*s*.005);
     d = torus(p,vec2(1.,.5));
 }
 if(field == 3) {
-    p = repLim(p,3.,vec3(0.,2.,0.));
-    d = capsule(p,vec3(1.),vec3(1.5),.5);
+    scl = .12;
+    p.xz *= rot2(sin(t*s)*.05);
+    p = repLim(p/scl,3.,vec3(0.,2.,0.))*scl;
+    d = capsule(p/scl,vec3(1.),vec3(1.5),.5)*scl;
 }
 if(field == 4) {
     p.xy *= rot2(t*s);
@@ -709,9 +716,9 @@ vec2 trace(vec3 ro,vec3 rd) {
     
     float d = -1.0;
     float s = 0.;
-    float e = 325.;  
+    float e = 125;  
 
-    for(int i = 0; i < 125 i++) {
+    for(int i = 0; i < 225; i++) {
 
         vec3 p = ro + s * rd;
         vec2 dist = scene(p);
@@ -811,8 +818,8 @@ vec3 render(inout vec3 ro,inout vec3 rd,inout vec3 ref) {
     float fre = pow(clamp(1.+dot(n,rd),0.,1.),2.);
     vec3 col = vec3(.5);
 
-    vec3 l = normalize(vec3(10.,0.,10.));
-    l.xz *= rot2(time*.0001);
+    vec3 l = normalize(vec3(10.,3.,-12.));
+    l.xz *= rot2(time*.00001);
 
     float rad = dot(rd,l);
     col += col * vec3(.5,.12,.25) * expStep(rad,100.);
