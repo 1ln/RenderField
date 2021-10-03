@@ -668,36 +668,82 @@ float t = time,
       s = .0001;
 
 float scl = 0.5;
-
 vec3 q = p;
 
 if(field == 0) {
+    p.xz *= rot2(easeOut4(sin(t*s))*.5);
+    d = box(p,vec3(1.));
+}
+
+if(field == 1) {
     p.xz *= rot2(easeInOut3(t*s)*.005);
     p.yz *= rot2(easeIn4(t*s)*.0005);
     d = mix(sphere(p,.25),box(q,vec3(1.)),sin(t*.0001)*.5+.5);
 }
-if(field == 1) {
+if(field == 2) {
     scl = .25;
     p.yz *= rot2(t*s);
     p.xz *= rot2(t*s*.05);
     p = repLim(p/scl,2.,vec3(3.))*scl;
-    d = box(p/scl,vec3(.5)*scl;
+    d = box(p/scl,vec3(.5))*scl;
 }
-if(field == 2) {
+if(field == 3) {
     p.yz *= rot2(t*s);
     p.x *= sin(t*s*.005);
     d = torus(p,vec2(1.,.5));
 }
-if(field == 3) {
+if(field == 4) {
     scl = .12;
     p.xz *= rot2(sin(t*s)*.05);
     p = repLim(p/scl,3.,vec3(0.,2.,0.))*scl;
     d = capsule(p/scl,vec3(1.),vec3(1.5),.5)*scl;
 }
-if(field == 4) {
+if(field == 5) {
     p.xy *= rot2(t*s);
-    d = smod(sphere(p,.5),box(p,vec3(1.)),.1);
+    d = smod(box(p,vec3(1.)),sphere(p,.72),.1);
 }
+
+if(field == 6) {
+    p.xy *= rot2(t*s);
+    d = icosahedron(p,1.);
+}
+
+if(field == 7) {
+    p.xz *= rot2(t*s)*.05; 
+    d = menger(p,5,1.,box(p,vec3(1.)));
+}
+
+if(field == 8) {
+    p.xz *= rot2(t*s); 
+    d = gyroid(p,12.,.12,.00045,box(p,vec3(1.)));
+}
+
+if(field == 9) {
+    p.yz *= rot2(t*s);
+    p.xy = radmod(p.xy,12.);
+    p.y -= 4.;
+    d = solidAngle(p,vec2(1.,2.),.5);
+}
+
+if(field == 10) {
+    float r = 8.;
+    
+    d = dodecahedron(p,1.);
+    for(int i = 0; i < 3; ++i) {
+        p.xz *= rot2(radians(180.)*time*.1);
+        p.xy *= rot2(radians(180.)/2.*.35);
+        p.yz *= rot2(radians(180.)/2.*.012);
+        p = abs(p) - r * .5;
+        r /= 3.;
+        d = min(d,dodecahedron(p,1.));
+
+    }
+
+
+}
+
+
+
 
 
 
@@ -716,7 +762,7 @@ vec2 trace(vec3 ro,vec3 rd) {
     
     float d = -1.0;
     float s = 0.;
-    float e = 125;  
+    float e = 125.; 
 
     for(int i = 0; i < 225; i++) {
 
